@@ -1,8 +1,13 @@
 // ----=  HANDS  =----
 /* load images here */
+
 function prepareInteraction() {
-  //bgImage = loadImage('/images/background.png');
+head = loadImage('/images/PuppetHead.png');
+torso = loadImage('/images/PuppetTorso.png');
+armR = loadImage('/images/PuppetArmR.png');
+armL = loadImage('/images/PuppetArmL.png');
 }
+
 
 function drawInteraction(faces, hands) {
   // hands part
@@ -14,30 +19,80 @@ function drawInteraction(faces, hands) {
       drawConnections(hand)
     }
 
-    // This is how to load in the x and y of a point on the hand.
-    let indexFingerTipX = hand.index_finger_tip.x;
-    let indexFingerTipY = hand.index_finger_tip.y;
 
-    //  let pinkyFingerTipX = hand.pinky_finger_tip.x;
-    //  let pinkyFingerTipY = hand.pinky_finger_tip.y;
+angleMode(DEGREES);
+// Key finger points
+let tip = hand.middle_finger_tip;//based mainly around the middle finger
+let pip = hand.middle_finger_pip;//used the 'hand.' variables for this as they were easy to copy/paste
+let wrist = hand.wrist;//to reference for scale 
 
-    /*
-    Start drawing on the hands here
-    */
+let dx = pip.x - tip.x; //.x reads the x value of the pip/tip (of the middle finger)
+let dy = pip.y - tip.y; //.y reads the y
+let angle = atan2(dy, dx); //atan2- calculates angle formed by the different hand points.
 
-    fill(225, 225, 0);
-    ellipse(indexFingerTipX, indexFingerTipY, 30, 30);
 
-    // drawPoints(hand)
+//scaling based on where the hand is/ distance
+let handLength = dist(wrist.x, wrist.y, tip.x, tip.y); //sets handlength depending on the distance between wrist and middle finger
+let scaleFactor = map(handLength, 80, 300, 0.01, 0.25, true); //scales the size depending on how far away the hand is- observed by handlength
 
-    //fingerPuppet(indexFingerTipX, indexFingerTipY);
 
-    //chameleonHandPuppet(hand)
+//tips of fingers next to middle- for arm control
+let indexTip = hand.index_finger_tip;
+let ringTip = hand.ring_finger_tip;
 
-    /*
-    Stop drawing on the hands here
-    */
-  }
+
+//offsets the arms from the central torso- allows it to also scale with the distance. 
+let shoulderOffsetX = torso.width * scaleFactor * 0.7; 
+let shoulderOffsetY = torso.height * scaleFactor * -0.3; 
+
+
+
+
+//torso
+push();
+  imageMode(CENTER); //so the image doesnt draw from the corner 
+  translate(pip.x, pip.y); //draws middle of finger
+  rotate(angle-90); //the angle was offset, this rectifys it
+  image(torso, 0, -10, torso.width * scaleFactor, torso.height * scaleFactor); // draws the image- allows it to be scaled
+pop();
+
+
+
+//head - works much the same as the torso- except drawn on the fingertip 
+push();
+  imageMode(CENTER);
+  translate(tip.x, tip.y);
+  rotate(angle-90);
+  image(head, 0, -head.height * scaleFactor * 0.4, head.width * scaleFactor, head.height * scaleFactor);
+pop();
+ 
+
+
+
+//right arm
+push();
+  imageMode(CENTER); //draws central 
+  translate(pip.x + shoulderOffsetX, pip.y + shoulderOffsetY); //translates the centre point as between the fingertip and the torso- offset 
+    let angleR = atan2(indexTip.y - (pip.y + shoulderOffsetY), indexTip.x - (pip.x + shoulderOffsetX));//lets the angle follow the fingertips 
+  rotate(angleR);//activates the rotation to follwo the fingertips 
+  image(armR, 0, 0, armR.width * scaleFactor, armR.height * scaleFactor); //draws the arm with relation to everything getting smaller with distance 
+pop();
+
+//left arm - works much the same as the right arm except some values are swapped/replaced with the left counterparts. 
+push();
+  imageMode(CENTER);
+  translate(pip.x - shoulderOffsetX, pip.y + shoulderOffsetY); // left shoulder
+    let angleL = atan2(ringTip.y - (pip.y + shoulderOffsetY), ringTip.x - (pip.x - shoulderOffsetX));
+  rotate(angleL);
+  image(armL, 0, 0, armL.width * scaleFactor, armL.height * scaleFactor);
+pop();
+
+
+
+/*
+Stop drawing on the hands here
+*/
+}
   // You can make addtional elements here, but keep the hand drawing inside the for loop. 
   //------------------------------------------------------
 }
@@ -45,90 +100,3 @@ function drawInteraction(faces, hands) {
 
 
 
-
-
-function fingerPuppet(x, y) {
-  fill(255, 38, 219) // pink
-  ellipse(x, y, 100, 20)
-  ellipse(x, y, 20, 100)
-
-  fill(255, 252, 48) // yellow
-  ellipse(x, y, 20) // draw center 
-
-}
-
-
-function pinchCircle(hand) { // adapted from https://editor.p5js.org/ml5/sketches/DNbSiIYKB
-  // Find the index finger tip and thumb tip
-  let finger = hand.index_finger_tip;
-  //let finger = hand.pinky_finger_tip;
-  let thumb = hand.thumb_tip;
-
-  // Draw circles at finger positions
-  let centerX = (finger.x + thumb.x) / 2;
-  let centerY = (finger.y + thumb.y) / 2;
-  // Calculate the pinch "distance" between finger and thumb
-  let pinch = dist(finger.x, finger.y, thumb.x, thumb.y);
-
-  // This circle's size is controlled by a "pinch" gesture
-  fill(0, 255, 0, 200);
-  stroke(0);
-  strokeWeight(2);
-  circle(centerX, centerY, pinch);
-
-}
-
-function chameleonHandPuppet(hand) {
-  // Find the index finger tip and thumb tip
-  // let finger = hand.index_finger_tip;
-
-  let finger = hand.middle_finger_tip; // this finger now contains the x and y infomation! you can access it by using finger.x 
-  let thumb = hand.thumb_tip;
-
-  // Draw circles at finger positions
-  let centerX = (finger.x + thumb.x) / 2;
-  let centerY = (finger.y + thumb.y) / 2;
-  // Calculate the pinch "distance" between finger and thumb
-  let pinch = dist(finger.x, finger.y, thumb.x, thumb.y);
-
-  // This circle's size is controlled by a "pinch" gesture
-  fill(0, 255, 0, 200);
-  stroke(0);
-  strokeWeight(2);
-  circle(centerX, centerY, pinch);
-
-  let indexFingerTipX = hand.index_finger_tip.x;
-  let indexFingerTipY = hand.index_finger_tip.y;
-  fill(0)
-  circle(indexFingerTipX, indexFingerTipY, 20);
-
-}
-
-function drawConnections(hand) {
-  // Draw the skeletal connections
-  push()
-  for (let j = 0; j < connections.length; j++) {
-    let pointAIndex = connections[j][0];
-    let pointBIndex = connections[j][1];
-    let pointA = hand.keypoints[pointAIndex];
-    let pointB = hand.keypoints[pointBIndex];
-    stroke(255, 0, 0);
-    strokeWeight(2);
-    line(pointA.x, pointA.y, pointB.x, pointB.y);
-  }
-  pop()
-}
-
-
-// This function draw's a dot on all the keypoints. It can be passed a whole face, or part of one. 
-function drawPoints(feature) {
-  push()
-  for (let i = 0; i < feature.keypoints.length; i++) {
-    let element = feature.keypoints[i];
-    noStroke();
-    fill(0, 255, 0);
-    circle(element.x, element.y, 10);
-  }
-  pop()
-
-}
